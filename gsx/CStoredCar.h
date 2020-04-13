@@ -1,3 +1,8 @@
+/*
+    CStoredCar structure (Grand Theft Auto San Andreas) header file
+    
+    Used in https://github.com/Fabio3rs/Garage-Save-eXtender
+*/
 #pragma once
 #ifndef CStoredCar_h
 #define CStoredCar_h

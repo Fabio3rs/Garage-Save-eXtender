@@ -1,3 +1,4 @@
+// Original: https://github.com/cleolibrary/CLEO4/blob/master/source/crc32.h
 #pragma once
 #include <string>
 

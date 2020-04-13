@@ -1,3 +1,4 @@
+// https://github.com/cleolibrary/CLEO4/blob/master/source/crc32.cpp
 #include "crc32.h"
 #include <ctype.h>
 
