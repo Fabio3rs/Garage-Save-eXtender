@@ -96,6 +96,15 @@ namespace GSX
 
 	// API version
 	const char *getAPIVersionString();
+
+	/// New API Functions
+	void setScheduledVehicleData(CVehicle* veh, const char* name, int size, const void* ptr, bool forceCopyNow);
+	void deleteScheduledVehicleData(CVehicle* veh, const char* name);
+	void setVehicleData(CVehicle* veh, const char* name, int size, const void* ptr);
+	void deleteVehicleData(CVehicle* veh, const char* name);
+	uint32_t getVehicleData(CVehicle* veh, const char* name, uint8_t* ptr, uint32_t maxsize);
+	int hasVehicleData(CVehicle* veh, const char* name);
+	int hasScheduledVehicleData(CVehicle* veh, const char* name);
 }
 
 #endif
