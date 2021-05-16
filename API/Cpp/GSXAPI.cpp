@@ -232,4 +232,3 @@ int GSX::hasScheduledVehicleData(CVehicle* veh, const char* name)
 	load();
 	return GSX_hasScheduledVehicleData(veh, name);
 }
-
