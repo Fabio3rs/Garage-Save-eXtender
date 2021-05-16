@@ -10,6 +10,7 @@
 #include <chrono>
 #include "crc32.h"
 #include <plugin_sa/game_sa/CVehicle.h>
+#include "CLog.h"
 
 extern "C" __declspec(dllexport) const char * __cdecl GSX_getCompileTime()
 {
@@ -369,6 +370,7 @@ void staticHookClearData()
 
 void hook()
 {
+	CLog::log() << "void hook() function";
 	CExtraSaveData::inst();
 	grgExtraManager::grg();
 	grgExtraManager::on_restore(restore);
