@@ -1,6 +1,7 @@
 #pragma once
 #ifndef GTASA_EXTRAVEHICLEDATA
 #define GTASA_EXTRAVEHICLEDATA
+#define GTASA
 #include <map>
 #include <string>
 #include <vector>

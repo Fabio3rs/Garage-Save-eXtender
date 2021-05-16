@@ -9,6 +9,7 @@
 #include <ctime>
 #include <chrono>
 #include "crc32.h"
+#include <plugin_sa/game_sa/CVehicle.h>
 
 extern "C" __declspec(dllexport) const char * __cdecl GSX_getCompileTime()
 {
@@ -323,18 +324,6 @@ void save(CVehicle *veh, CStoredCar *storedData)
 	auto &data = CVehicleExtraData::inst().getDataByVehPtr(veh);
 
 	{
-		/*for (auto it = data.toLoad.begin(); it != data.toLoad.end(); )
-		{
-			if (it->second.savedRecently)
-			{
-				++it;
-			}
-			else
-			{
-				it = data.toLoad.erase(it);
-			}
-		}*/
-
 		for (auto &tsave : data.toSave)
 		{
 			auto &b = data.toLoad[tsave.first].bytes;
@@ -353,7 +342,7 @@ void save(CVehicle *veh, CStoredCar *storedData)
 		if (data.toLoad.size() > 0)
 		{
 			car c;
-			c.model = veh->m_wModelIndex;
+			c.model = veh->m_nModelIndex;
 			c.pos = storedData->pos;
 			c.data = std::move(data.toLoad);
 
@@ -369,9 +358,9 @@ void save(CVehicle *veh, CStoredCar *storedData)
 	}
 }
 
-typedef injector::function_hooker<0x0053BCC9, void(void)> ngamectscptp_hook;
-typedef injector::function_hooker<0x00618F05, void(void)> ngamectscptp_hook2;
-typedef injector::function_hooker<0x0053BE8D, void(void)> ngamectscptp_hook3;
+typedef injector::function_hooker<injector::scoped_call, 0x0053BCC9, void(void)> ngamectscptp_hook;
+typedef injector::function_hooker<injector::scoped_call, 0x00618F05, void(void)> ngamectscptp_hook2;
+typedef injector::function_hooker<injector::scoped_call, 0x0053BE8D, void(void)> ngamectscptp_hook3;
 
 void staticHookClearData()
 {

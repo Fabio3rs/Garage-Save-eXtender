@@ -1,6 +1,7 @@
 #pragma once
 #ifndef GTASA_EXTRASAVEDATA
 #define GTASA_EXTRASAVEDATA
+#define SUPPORTED_10US
 #include <map>
 #include <string>
 #include <vector>

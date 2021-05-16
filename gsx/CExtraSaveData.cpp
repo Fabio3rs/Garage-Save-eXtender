@@ -1,6 +1,5 @@
 #include "CExtraSaveData.h"
 #include <injector/saving.hpp>
-#include <plugin_sa\game_sa\CColData.h>
 #include <injector/injector.hpp>
 #include <injector/assembly.hpp>
 #include <injector/calling.hpp>
@@ -8,13 +7,8 @@
 #include <plugin_sa\game_sa\RenderWare.h>
 #include <map>
 #include <plugin_sa\game_sa\CPool.h>
-#include <plugin_sa\game_sa\CDummy.h>
-#include <plugin_sa\game_sa\CObject.h>
 #include <plugin_sa\game_sa\CVehicle.h>
-#include <plugin_sa\game_sa\CPed.h>
-#include <plugin_sa\game_sa\CAutomobile.h>
 #include <vector>
-#include <plugin_sa\game_sa\CModelInfo.h>
 #include <unordered_map>
 #include <fstream>
 #include "CVehicleExtraData.h"

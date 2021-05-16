@@ -4,6 +4,8 @@
 #include <functional>
 #include "CStoredCar.h"
 
+class CVehicle;
+
 class grgExtraManager
 {
 	typedef std::function<void(CVehicle*, CStoredCar*)> OnRestoreType;

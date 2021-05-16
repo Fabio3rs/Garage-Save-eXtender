@@ -1,5 +1,5 @@
 #include "CVehicleExtraData.h"
-#include <plugin_sa\game_sa\events\Events_SA.h>
+#include <Events.h>
 #include "crc32.h"
 #include <ctime>
 #include <chrono>
@@ -43,7 +43,7 @@ uint64_t CVehicleExtraData::genHash(int model, int handle, const CVector &pos)
 
 uint64_t CVehicleExtraData::genHashFromVeh(CVehicle *ptr)
 {
-	return genHash(ptr->m_wModelIndex, CPool_CVehicle__handleOf(getPool(), ptr), ptr->m_pCoords->at);
+	return genHash(ptr->m_nModelIndex, CPool_CVehicle__handleOf(getPool(), ptr), ptr->m_matrix->at);
 }
 
 CVehicleExtraData::cardata *CVehicleExtraData::vehicleDataRestore(CVehicle *veh, CStoredCar *storedData)
@@ -56,7 +56,10 @@ CVehicleExtraData::cardata *CVehicleExtraData::vehicleDataRestore(CVehicle *veh,
 	{
 		auto &car = *it;
 
-		if (car.model == storedData->model && floatTest(car.pos.x, storedData->pos.x) && floatTest(car.pos.y, storedData->pos.y) && floatTest(car.pos.z, storedData->pos.z))
+		/*
+		Remove model check to be compatible with autoid
+		*/
+		if (/*car.model == storedData->model &&*/ floatTest(car.pos.x, storedData->pos.x) && floatTest(car.pos.y, storedData->pos.y) && floatTest(car.pos.z, storedData->pos.z))
 		{
 			data.destroy();
 			data.toLoad = std::move(car.data);
@@ -85,9 +88,9 @@ void CVehicleExtraData::clearCarsPool()
 {
 	initCarsPool();
 
-	for (int i = 0, size = carsPool.m_Size; i < size; i++)
+	for (int i = 0, size = carsPool.m_nSize; i < size; i++)
 	{
-		carsPool.m_Objects[i].construct();
+		carsPool.m_pObjects[i].construct();
 	}
 }
 
@@ -103,19 +106,19 @@ void CVehicleExtraData::initCarsPool()
 		if (!pool)
 			pool = *injector::ReadMemory<CPool<CVehicle>**>(0x0055103C + 1);
 
-		carsPool.m_Objects = new cardata[pool->m_Size];
+		carsPool.m_pObjects = new cardata[pool->m_nSize];
 
-		carsPool.m_Size = pool->m_Size;
+		carsPool.m_nSize = pool->m_nSize;
 		carsPool.m_nFirstFree = pool->m_nFirstFree;
 
 		carsPool.m_bOwnsAllocations = false;
 
-		carsPool.m_ByteMap = pool->m_ByteMap;
+		carsPool.m_byteMap = pool->m_byteMap;
 		carsPoolInited = true;
 
-		for (int i = 0, size = carsPool.m_Size; i < size; i++)
+		for (int i = 0, size = carsPool.m_nSize; i < size; i++)
 		{
-			carsPool.m_Objects[i].construct();
+			carsPool.m_pObjects[i].construct();
 		}
 	}
 }
@@ -136,7 +139,7 @@ CVehicleExtraData::cardata &CVehicleExtraData::getDataByVehPtr(CVehicle *ptr)
 	int handle = CPool_CVehicle__handleOf(pool, ptr);
 	int phandle = handle >> 8;
 
-	auto &obj = carsPool.m_Objects[phandle];
+	auto &obj = carsPool.m_pObjects[phandle];
 	return obj;
 }
 
@@ -334,6 +337,74 @@ extern "C" int __declspec(dllexport) __cdecl dataToLoadExists(CVehicle *veh, con
 	return false;
 }
 
+extern "C" void __declspec(dllexport) __cdecl GSX_setScheduledVehicleData(CVehicle * veh, const char* name, int size, const void* ptr, bool forceCopyNow)
+{
+	setDataToSaveLaterVehPtr(veh, name, size, ptr, forceCopyNow);
+}
+
+extern "C" void __declspec(dllexport) __cdecl GSX_deleteScheduledVehicleData(CVehicle * veh, const char* name)
+{
+	removeToSaveLaterVehPtr(veh, name);
+}
+
+extern "C" void __declspec(dllexport) __cdecl GSX_setVehicleData(CVehicle *veh, const char* name, int size, const void* ptr)
+{
+	pushDirectlyToSavedData(veh, name, size, ptr);
+}
+
+extern "C" void __declspec(dllexport) __cdecl GSX_deleteVehicleData(CVehicle * veh, const char* name)
+{
+	removeToLoadDataVehPtr(veh, name);
+}
+
+extern "C" __declspec(dllexport) uint32_t __cdecl GSX_getVehicleData(CVehicle * veh, const char* name, uint8_t *ptr, uint32_t maxsize)
+{
+	if (veh == nullptr)
+	{
+		std::map<std::string, toLoadData>* toLoad = CVehicleExtraData::inst().beforeSpawned.toLoad;
+		if (toLoad)
+		{
+			auto it = toLoad->find(name);
+
+			if (it != toLoad->end())
+			{
+				auto& obj = *it;
+
+				if (obj.second.bytes.size() == 0)
+					return 0;
+
+				uint32_t copysz = min(obj.second.bytes.size(), maxsize);
+				std::copy(obj.second.bytes.data(), obj.second.bytes.data() + copysz, ptr);
+
+				return copysz;
+			}
+		}
+
+		return 0;
+	}
+
+	auto& data = CVehicleExtraData::inst().getDataByVehPtr(veh);
+
+	CVehicleExtraData::testGSXReserverdNames(veh, name, data);
+
+	auto it = data.toLoad.find(name);
+
+	if (it != data.toLoad.end())
+	{
+		auto& obj = *it;
+
+		if (obj.second.bytes.size() == 0)
+			return 0;
+
+		uint32_t copysz = min(obj.second.bytes.size(), maxsize);
+		std::copy(obj.second.bytes.data(), obj.second.bytes.data() + copysz, ptr);
+
+		return copysz;
+	}
+
+	return 0;
+}
+
 extern "C" __declspec(dllexport) void* __cdecl getLoadDataByVehPtr(CVehicle *veh, const char *name)
 {
 	if (veh == nullptr)
@@ -488,6 +559,19 @@ extern "C" __declspec(dllexport) int __cdecl getDataToSaveSize(CVehicle *veh, co
 
 	return -1;
 }
+
+extern "C" int __declspec(dllexport) __cdecl GSX_hasVehicleData(CVehicle * veh, const char* name)
+{
+	int result = getDataToLoadSize(veh, name);
+	return result == -1 ? 0 : result;
+}
+
+extern "C" int __declspec(dllexport) __cdecl GSX_hasScheduledVehicleData(CVehicle * veh, const char* name)
+{
+	int result = getDataToSaveSize(veh, name);
+	return result == -1 ? 0 : result;
+}
+
 
 void vehDtorEvent(CVehicle *veh)
 {
