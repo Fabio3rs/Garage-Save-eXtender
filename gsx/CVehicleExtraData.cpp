@@ -337,22 +337,22 @@ extern "C" int __declspec(dllexport) __cdecl dataToLoadExists(CVehicle *veh, con
 	return false;
 }
 
-extern "C" void __declspec(dllexport) __cdecl GSX_setScheduledVehicleData(CVehicle * veh, const char* name, int size, const void* ptr, bool forceCopyNow)
+extern "C" __declspec(dllexport) void __cdecl GSX_setScheduledVehicleData(CVehicle * veh, const char* name, int size, const void* ptr, bool forceCopyNow)
 {
 	setDataToSaveLaterVehPtr(veh, name, size, ptr, forceCopyNow);
 }
 
-extern "C" void __declspec(dllexport) __cdecl GSX_deleteScheduledVehicleData(CVehicle * veh, const char* name)
+extern "C" __declspec(dllexport) void __cdecl GSX_deleteScheduledVehicleData(CVehicle * veh, const char* name)
 {
 	removeToSaveLaterVehPtr(veh, name);
 }
 
-extern "C" void __declspec(dllexport) __cdecl GSX_setVehicleData(CVehicle *veh, const char* name, int size, const void* ptr)
+extern "C" __declspec(dllexport) void __cdecl GSX_setVehicleData(CVehicle *veh, const char* name, int size, const void* ptr)
 {
 	pushDirectlyToSavedData(veh, name, size, ptr);
 }
 
-extern "C" void __declspec(dllexport) __cdecl GSX_deleteVehicleData(CVehicle * veh, const char* name)
+extern "C" __declspec(dllexport) void __cdecl GSX_deleteVehicleData(CVehicle * veh, const char* name)
 {
 	removeToLoadDataVehPtr(veh, name);
 }
@@ -560,13 +560,13 @@ extern "C" __declspec(dllexport) int __cdecl getDataToSaveSize(CVehicle *veh, co
 	return -1;
 }
 
-extern "C" int __declspec(dllexport) __cdecl GSX_hasVehicleData(CVehicle * veh, const char* name)
+extern "C" __declspec(dllexport) int __cdecl GSX_hasVehicleData(CVehicle * veh, const char* name)
 {
 	int result = getDataToLoadSize(veh, name);
 	return result == -1 ? 0 : result;
 }
 
-extern "C" int __declspec(dllexport) __cdecl GSX_hasScheduledVehicleData(CVehicle * veh, const char* name)
+extern "C" __declspec(dllexport) int __cdecl GSX_hasScheduledVehicleData(CVehicle * veh, const char* name)
 {
 	int result = getDataToSaveSize(veh, name);
 	return result == -1 ? 0 : result;
