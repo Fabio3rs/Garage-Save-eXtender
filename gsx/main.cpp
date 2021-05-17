@@ -19,17 +19,17 @@ extern "C" __declspec(dllexport) const char * __cdecl GSX_getCompileTime()
 
 extern "C" __declspec(dllexport) const char * __cdecl GSX_getVersionString()
 {
-	return "0.3.7a";
+	return "0.4.9a";
 }
 
 extern "C" __declspec(dllexport) float __cdecl GSX_getVersionNum()
 {
-	return 0.3705f;
+	return 0.4905f;
 }
 
 extern "C" __declspec(dllexport) int32_t __cdecl GSX_getVersionNumInt32()
 {
-	return 0x00030705;
+	return 0x00040905;
 }
 
 struct journalNews
