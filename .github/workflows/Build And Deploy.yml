@@ -24,7 +24,10 @@ jobs:
           sudo apt install -y gcc-mingw-w64-i686 g++-mingw-w64-i686 binutils-mingw-w64-i686 mingw-w64 win-iconv-mingw-w64-dev
           sudo update-alternatives --set i686-w64-mingw32-gcc $(sudo update-alternatives --list i686-w64-mingw32-gcc | grep posix | head -n 1)
           sudo update-alternatives --set i686-w64-mingw32-g++ $(sudo update-alternatives --list i686-w64-mingw32-g++ | grep posix | head -n 1)
-          sudo dpkg --add-architecture i386 && sudo apt-get update
+          echo "Adding wine32"
+          sudo apt purge -y nginx
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
           sudo apt install -y wine32
         
       - name: Compiling
