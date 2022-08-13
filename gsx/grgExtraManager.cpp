@@ -66,7 +66,7 @@ template <uintptr_t V> struct wrapper {
 		pusha
 		pushf
 
-		call _internalWrapperRestore
+		call _internalWrapperRestoreBef
         )asm");
 
         asm(R"asm(
@@ -105,7 +105,7 @@ static void __declspec(naked) saveHook() {
 		pusha
 		pushf
 
-		call _internalWrapperRestore
+		call _internalWrapperSave
 
 		popf
 		popa
