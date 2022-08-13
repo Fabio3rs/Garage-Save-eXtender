@@ -8,7 +8,7 @@ file(
 
 add_executable(maintest ${MAIN_TESTS_SOURCES})
 
-target_link_libraries(maintest gtest gtest_main)
+target_link_libraries(maintest gsx_internals gtest gtest_main)
 target_compile_options(maintest PUBLIC -static)
 target_link_options(maintest PUBLIC -static)
 

@@ -24,16 +24,16 @@ struct car {
 };
 
 class CExtraSaveData {
-    typedef std::function<void(int)> OnLoadGameType;
-    typedef std::function<void(int)> OnSaveGameType;
+    using OnLoadGameType = std::function<void(int)>;
+    using OnSaveGameType = std::function<void(int)>;
 
-    static OnLoadGameType &OnRestoreCallback();
-    static OnSaveGameType &OnSaveCallback();
-
-    static void loads(int id);
-    static void saves(int id);
+    static auto OnRestoreCallback() -> OnLoadGameType &;
+    static auto OnSaveCallback() -> OnSaveGameType &;
 
   public:
+    void loads(int id, std::istream &in);
+    void saves(int id, std::ostream &out);
+
     std::deque<car> data;
 
     template <class Archive> void serialize(Archive &archive) { archive(data); }
@@ -42,7 +42,7 @@ class CExtraSaveData {
 
     static void on_save(const OnSaveGameType &fn) { OnSaveCallback() = fn; }
 
-    static CExtraSaveData &inst();
+    static auto inst() -> CExtraSaveData &;
 
   private:
     CExtraSaveData();

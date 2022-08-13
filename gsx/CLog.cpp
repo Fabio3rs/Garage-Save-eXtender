@@ -5,10 +5,10 @@
  *http://brmodstudio.forumeiros.com
  *****************************************************************************************************/
 #include "CLog.h"
-#include <stdio.h>
-#include <time.h>
+#include <cstdio>
+#include <ctime>
 
-CLog &CLog::log() {
+auto CLog::log() -> CLog & {
     static CLog Log("gsx.log");
     return Log;
 }
@@ -40,7 +40,7 @@ CLog::CLog(const std::string &NameOfFile) {
 
 CLog::~CLog() noexcept { FinishLog(); }
 
-std::string CLog::GetDateAndTime() {
+auto CLog::GetDateAndTime() -> std::string {
     std::time_t tt =
         std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     std::string str = std::string(ctime(&tt));

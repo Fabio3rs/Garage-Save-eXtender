@@ -33,8 +33,8 @@ auto CEntity__getColModel =
 } // namespace
 
 class CVehicleExtraData {
-    bool carsPoolInited;
-    CPool<CVehicle> *pool;
+    bool carsPoolInited{};
+    CPool<CVehicle> *pool{};
 
   public:
     struct cardata {
@@ -50,32 +50,28 @@ class CVehicleExtraData {
             toSave.clear();
             toLoad.clear();
         }
-
-        cardata() { construct(); }
-
-        ~cardata() { destroy(); }
     };
 
     struct beforeSpawnData {
-        std::map<std::string, toLoadData> *toLoad;
-        CStoredCar *storedCar;
-
-        beforeSpawnData() : toLoad(nullptr), storedCar(nullptr) {}
+        std::map<std::string, toLoadData> *toLoad{};
+        CStoredCar *storedCar{};
     } beforeSpawned;
 
     CPool<cardata> carsPool;
 
-    static CVehicleExtraData &inst();
+    static auto inst() -> CVehicleExtraData &;
 
     void onloadGame(int id);
     void onsaveGame(int id);
-    cardata &getDataByVehPtr(CVehicle *ptr);
-    CPool<CVehicle> *getPool() { return pool; }
-    static uint64_t genHash(int model, int handle, const CVector &pos);
-    uint64_t genHashFromVeh(CVehicle *ptr);
-    cardata *vehicleDataRestore(CVehicle *veh, CStoredCar *storedData);
-    static bool testGSXReserverdNames(CVehicle *veh, const char *name,
-                                      cardata &data);
+    auto getDataByVehPtr(CVehicle *ptr) -> cardata &;
+    auto getPool() -> CPool<CVehicle> * { return pool; }
+    static auto genHash(int model, int handle, const CVector &pos) -> uint64_t;
+    auto genHashFromVeh(CVehicle *ptr) -> uint64_t;
+    auto vehicleDataRestore(CVehicle *veh, CStoredCar *storedData) -> cardata *;
+    static auto testGSXReserverdNames(CVehicle *veh, const char *name,
+                                      cardata &data) -> bool;
+
+    static auto getVehicleModel(CVehicle *veh) -> short;
 
   private:
     void clearCarsPool();

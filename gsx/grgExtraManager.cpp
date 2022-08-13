@@ -4,17 +4,18 @@
 #include <cstdint>
 #include <injector/calling.hpp>
 
-grgExtraManager::OnRestoreType &grgExtraManager::OnRestoreCallback() {
+auto grgExtraManager::OnRestoreCallback() -> grgExtraManager::OnRestoreType & {
     static OnRestoreType cb;
     return cb;
 }
 
-grgExtraManager::OnRestoreBefType &grgExtraManager::OnRestoreBefCallback() {
+auto grgExtraManager::OnRestoreBefCallback()
+    -> grgExtraManager::OnRestoreBefType & {
     static OnRestoreBefType cb;
     return cb;
 }
 
-grgExtraManager::OnSaveType &grgExtraManager::OnSaveCallback() {
+auto grgExtraManager::OnSaveCallback() -> grgExtraManager::OnSaveType & {
     static OnSaveType cb;
     return cb;
 }
@@ -29,7 +30,7 @@ void internalWrapperRestoreBef() {
     grgExtraManager::internalWrapperRestoreBef();
 }
 void internalWrapperSave() { grgExtraManager::internalWrapperSave(); }
-void *funRet = 0;
+void *funRet = nullptr;
 }
 
 static void __declspec(naked) restoreHook() {
@@ -52,14 +53,13 @@ static void __declspec(naked) restoreHook() {
 namespace inject {
 //
 template <uintptr_t V> struct wrapper {
-    static void *&retaddr() {
+    static auto retaddr() -> void *& {
         static void *addr;
         return addr;
     }
-};
 
-template <class T> static void __declspec(naked) restoreHookBeforeSpawn() {
-    asm volatile(R"asm(
+    static void __declspec(naked) restoreHookBeforeSpawn() {
+        __asm__ volatile(R"asm(
 		mov %ecx, _using_vehicle
 		mov %edi, _using_storedCar
 
@@ -69,24 +69,25 @@ template <class T> static void __declspec(naked) restoreHookBeforeSpawn() {
 		call _internalWrapperRestore
         )asm");
 
-    asm volatile(R"asm(
+        __asm__ volatile(R"asm(
             call *%0
             movl 0x0(%%eax), %%eax
         )asm"
-                 : "=a"(funRet)
-                 : "a"(T::retaddr));
+                         : "=a"(funRet)
+                         : "a"(retaddr));
 
-    asm volatile(R"asm(
+        __asm__ volatile(R"asm(
             popa
             popf
 
             jmp *(_funRet)
         )asm");
-}
+    }
+};
 
 template <uintptr_t T> static void MakeCALL() {
-    typedef wrapper<T> E;
-    E::retaddr() = injector::MakeCALL(T, restoreHookBeforeSpawn<E>).get();
+    using E = wrapper<T>;
+    E::retaddr() = injector::MakeCALL(T, E::restoreHookBeforeSpawn).get();
 }
 } // namespace inject
 
@@ -137,7 +138,7 @@ void grgExtraManager::internalWrapperSave() {
     }
 }
 
-grgExtraManager &grgExtraManager::grg() {
+auto grgExtraManager::grg() -> grgExtraManager & {
     static grgExtraManager obj;
     return obj;
 }

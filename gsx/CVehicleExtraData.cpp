@@ -1,13 +1,9 @@
 #include "CVehicleExtraData.h"
 #include "CExtraSaveData.h"
 #include "crc32.h"
-#include <Events.h>
 #include <chrono>
 #include <ctime>
-#include <plugin_sa/game_sa/CAutomobile.h>
-#include <plugin_sa/game_sa/CModelInfo.h>
 #include <plugin_sa/game_sa/CVehicle.h>
-#include <plugin_sa/game_sa/RenderWare.h>
 
 static bool floatTest(float f1, float f2) {
     float r = f1 - f2;
@@ -69,10 +65,8 @@ CVehicleExtraData::vehicleDataRestore(CVehicle *veh, CStoredCar *storedData) {
             it = allCars.erase(it);
             return &data;
             break;
-
-        } else {
-            ++it;
         }
+        ++it;
     }
 
     return &data;
@@ -94,23 +88,26 @@ void CVehicleExtraData::clearCarsPool() {
 void CVehicleExtraData::refreshCarsPool() {}
 
 void CVehicleExtraData::initCarsPool() {
-    if (!carsPoolInited) {
-        if (!pool)
-            pool = *injector::ReadMemory<CPool<CVehicle> **>(0x0055103C + 1);
+    if (carsPoolInited) {
+        return;
+    }
 
-        carsPool.m_pObjects = new cardata[pool->m_nSize];
+    if (pool == nullptr) {
+        pool = *injector::ReadMemory<CPool<CVehicle> **>(0x0055103C + 1);
+    }
 
-        carsPool.m_nSize = pool->m_nSize;
-        carsPool.m_nFirstFree = pool->m_nFirstFree;
+    carsPool.m_pObjects = new cardata[pool->m_nSize];
 
-        carsPool.m_bOwnsAllocations = false;
+    carsPool.m_nSize = pool->m_nSize;
+    carsPool.m_nFirstFree = pool->m_nFirstFree;
 
-        carsPool.m_byteMap = pool->m_byteMap;
-        carsPoolInited = true;
+    carsPool.m_bOwnsAllocations = false;
 
-        for (int i = 0, size = carsPool.m_nSize; i < size; i++) {
-            carsPool.m_pObjects[i].construct();
-        }
+    carsPool.m_byteMap = pool->m_byteMap;
+    carsPoolInited = true;
+
+    for (int i = 0, size = carsPool.m_nSize; i < size; i++) {
+        carsPool.m_pObjects[i].construct();
     }
 }
 
@@ -135,7 +132,7 @@ bool CVehicleExtraData::testGSXReserverdNames(CVehicle *veh, const char *name,
         std::string nm = name;
 
         if (nm == "_hash") {
-            if (data.toLoad["_hash"].bytes.size() == 0) {
+            if (data.toLoad["_hash"].bytes.empty()) {
                 uint64_t chash = CVehicleExtraData::inst().genHashFromVeh(veh);
                 data.toLoad["_hash"].bytes.reserve(sizeof(chash));
 
@@ -150,6 +147,10 @@ bool CVehicleExtraData::testGSXReserverdNames(CVehicle *veh, const char *name,
     }
 
     return false;
+}
+
+auto CVehicleExtraData::getVehicleModel(CVehicle *veh) -> short {
+    return veh->m_nModelIndex;
 }
 
 extern "C" void __declspec(dllexport) __cdecl setDataToSaveLaterVehPtr(
@@ -415,14 +416,15 @@ extern "C" __declspec(dllexport) void *__cdecl getLoadDataByVehPtrSz(
     if (veh == nullptr) {
         std::map<std::string, toLoadData> *toLoad =
             CVehicleExtraData::inst().beforeSpawned.toLoad;
-        if (toLoad) {
+        if (toLoad != nullptr) {
             auto it = toLoad->find(name);
 
             if (it != toLoad->end()) {
                 auto &obj = *it;
 
-                if (obj.second.bytes.size() == 0)
+                if (obj.second.bytes.empty()) {
                     return nullptr;
+                }
 
                 if (obj.second.bytes.size() != expectingSize) {
                     return nullptr;
@@ -444,8 +446,9 @@ extern "C" __declspec(dllexport) void *__cdecl getLoadDataByVehPtrSz(
     if (it != data.toLoad.end()) {
         auto &obj = *it;
 
-        if (obj.second.bytes.size() == 0)
+        if (obj.second.bytes.empty()) {
             return nullptr;
+        }
 
         if (obj.second.bytes.size() != expectingSize) {
             return nullptr;
@@ -462,7 +465,7 @@ extern "C" __declspec(dllexport) int __cdecl getDataToLoadSize(
     if (veh == nullptr) {
         std::map<std::string, toLoadData> *toLoad =
             CVehicleExtraData::inst().beforeSpawned.toLoad;
-        if (toLoad) {
+        if (toLoad != nullptr) {
             auto it = toLoad->find(name);
 
             if (it != toLoad->end()) {
@@ -524,12 +527,7 @@ extern "C" __declspec(dllexport) int __cdecl GSX_hasScheduledVehicleData(
     return result == -1 ? 0 : result;
 }
 
-void vehDtorEvent(CVehicle *veh) {
-    CVehicleExtraData::inst().getDataByVehPtr(veh).destroy();
-}
-
 CVehicleExtraData::CVehicleExtraData() {
     carsPoolInited = false;
     pool = nullptr;
-    plugin::Events::vehicleDtorEvent.Add(vehDtorEvent, plugin::PRIORITY_AFTER);
 }

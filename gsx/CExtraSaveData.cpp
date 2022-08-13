@@ -1,7 +1,6 @@
 #include "CExtraSaveData.h"
 #include "../injector/saving.hpp"
 #include "CLog.h"
-#include "CVehicleExtraData.h"
 #include <cereal/cereal.hpp>
 #include <cereal/types/deque.hpp>
 #include <cereal/types/map.hpp>
@@ -24,108 +23,58 @@ inline void CEREAL_LOAD_FUNCTION_NAME(Archive &ar, CVector &vector) {
 }
 } // namespace cereal
 
-CExtraSaveData::OnLoadGameType &CExtraSaveData::OnRestoreCallback() {
+auto CExtraSaveData::OnRestoreCallback() -> CExtraSaveData::OnLoadGameType & {
     static OnLoadGameType cb;
     return cb;
 }
 
-CExtraSaveData::OnSaveGameType &CExtraSaveData::OnSaveCallback() {
+auto CExtraSaveData::OnSaveCallback() -> CExtraSaveData::OnSaveGameType & {
     static OnSaveGameType cb;
     return cb;
 }
 
-void CExtraSaveData::loads(int id) {
-    CVehicleExtraData::inst().onloadGame(id);
-    inst().data.clear();
+void CExtraSaveData::loads(int id, std::istream &in) {
+    data.clear();
 
-    {
-        auto &fncb = OnRestoreCallback();
-        if (fncb) {
-            fncb(id);
-        }
+    if (auto &fncb = OnRestoreCallback()) {
+        fncb(id);
     }
 
-    if (id == -1)
+    if (id == -1) {
         return;
-
-    injector::save_manager::scoped_userdir dir;
-
-    std::string name;
-    name.reserve(4096);
-    {
-        char buffer[4096] = {0};
-        GetCurrentDirectoryA(sizeof(buffer), buffer);
-        name += buffer;
     }
-    name += "/gsx/carsExtraData" + std::to_string(id);
 
-    std::fstream file(name, std::ios::in | std::ios::binary);
+    try {
+        cereal::PortableBinaryInputArchive iarchive(in);
 
-    if (file.is_open()) {
-        try {
-            cereal::PortableBinaryInputArchive iarchive(file);
-
-            iarchive(inst());
-        } catch (...) {
-            CLog::log().multiRegister("Error file %0 line 1", __FILE__,
-                                      __LINE__);
-            inst().data.clear();
-        }
-    } else {
-        CLog::log().multiRegister("Can't open the file %0 line %1 filename: %2",
-                                  __FILE__, __LINE__, name);
+        iarchive(*this);
+    } catch (...) {
+        CLog::log().multiRegister("Error file %0 line 1", __FILE__, __LINE__);
+        data.clear();
     }
 }
 
-void CExtraSaveData::saves(int id) {
-    CVehicleExtraData::inst().onsaveGame(id);
+void CExtraSaveData::saves(int id, std::ostream &out) {
+    try {
+        cereal::PortableBinaryOutputArchive iarchive(out);
 
-    injector::save_manager::scoped_userdir dir;
-
-    std::string name;
-    name.reserve(4096);
-    {
-        char buffer[4096] = {0};
-        GetCurrentDirectoryA(sizeof(buffer), buffer);
-        name += buffer;
-    }
-    name += "/gsx/carsExtraData" + std::to_string(id);
-
-    BOOL gsxdir = CreateDirectoryA("gsx", 0);
-    std::fstream file(name, std::ios::out | std::ios::trunc | std::ios::binary);
-
-    if (file.is_open()) {
-        try {
-            cereal::PortableBinaryOutputArchive iarchive(file);
-
-            iarchive(inst());
-        } catch (const std::exception &e) {
-            CLog::log().multiRegister("Error %0 %1 line %2", e.what(), __FILE__,
-                                      __LINE__);
-        } catch (...) {
-            CLog::log().multiRegister("Error Unknown error %0 line %1",
-                                      __FILE__, __LINE__);
-        }
-    } else {
-        CLog::log().multiRegister(
-            "Can't open the file %0 line %1 filename: %2 CreateDirectoryA: %3",
-            __FILE__, __LINE__, name, (bool)gsxdir);
+        iarchive(*this);
+    } catch (const std::exception &e) {
+        CLog::log().multiRegister("Error %0 %1 line %2", e.what(), __FILE__,
+                                  __LINE__);
+    } catch (...) {
+        CLog::log().multiRegister("Error Unknown error %0 line %1", __FILE__,
+                                  __LINE__);
     }
 
-    {
-        auto &fncb = OnSaveCallback();
-        if (fncb) {
-            fncb(id);
-        }
+    if (auto &fncb = OnSaveCallback()) {
+        fncb(id);
     }
 }
 
-CExtraSaveData &CExtraSaveData::inst() {
+auto CExtraSaveData::inst() -> CExtraSaveData & {
     static CExtraSaveData instance;
     return instance;
 }
 
-CExtraSaveData::CExtraSaveData() {
-    injector::save_manager::on_load(loads);
-    injector::save_manager::on_save(saves);
-}
+CExtraSaveData::CExtraSaveData() = default;

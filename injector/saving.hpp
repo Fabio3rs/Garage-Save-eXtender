@@ -24,105 +24,159 @@
  *
  */
 #pragma once
+#include <algorithm>
+#include <array>
+#include <cstring>
 #include <injector/hooking.hpp>
+#include <memory>
+#include <string_view>
 
 namespace injector {
 class save_manager {
   private:
     // Hooks
-    typedef function_hooker<scoped_call, 0x53E59B, char(void)> fnew_hook;
-    typedef function_hooker<scoped_call, 0x53C6EA, void(void)> ldng_hook;
-    typedef function_hooker<scoped_call, 0x53C70B, char(char *)> ldngb_hook;
-    typedef function_hooker_fastcall<scoped_call, 0x578DFA,
-                                     int(void *, int, int)>
-        onsav_hook;
+    using fnew_hook = function_hooker<scoped_call, 5498267, char()>;
+    using ldng_hook = function_hooker<scoped_call, 5490410, void()>;
+    using ldngb_hook = function_hooker<scoped_call, 5490443, char(char *)>;
+    using onsav_hook =
+        function_hooker_fastcall<scoped_call, 5737978, int(void *, int, int)>;
 
     // Prototypes
-    typedef std::function<void(int)> OnLoadType;
-    typedef std::function<void(int)> OnSaveType;
+    using OnLoadType = std::function<void(int)>;
+    using OnSaveType = std::function<void(int)>;
 
     // Callbacks storage
-    static OnLoadType &OnLoadCallback() {
+    static auto OnLoadCallback() -> OnLoadType & {
         static OnLoadType cb;
         return cb;
     }
 
-    static OnSaveType &OnSaveCallback() {
+    static auto OnSaveCallback() -> OnSaveType & {
         static OnSaveType cb;
         return cb;
     }
 
     // Necessary game vars
-    static bool IsLoad() { return ReadMemory<char>(0xBA6748 + 0x60) != 0; }
-    static char GetSlot() { return ReadMemory<char>(0xBA6748 + 0x15F); }
-    static bool SetDirMyDocuments() {
+    static auto IsLoad() -> bool {
+        return ReadMemory<char>(0xBA6748 + 0x60) != 0;
+    }
+    static auto GetSlot() -> char { return ReadMemory<char>(0xBA6748 + 0x15F); }
+    static auto SetDirMyDocuments() -> bool {
         return (memory_pointer(0x538860).get<int()>()()) != 0;
     }
 
     // Calls on load callback if possible
     static void CallOnLoad(int slot) {
-        if (auto &cb = OnLoadCallback())
+        if (auto &cb = OnLoadCallback()) {
             cb(slot);
+        }
     }
 
     // Calls on save callback if possible
     static void CallOnSave(int slot) {
-        if (auto &cb = OnSaveCallback())
+        if (auto &cb = OnSaveCallback()) {
             cb(slot);
+        }
     }
 
     // Patches the game to notify callbacks
     static void Patch() {
         static bool bPatched = false;
-        if (bPatched == true)
+        if (bPatched) {
             return;
+        }
         bPatched = true;
 
         // On the first time the user does a new-game/load-game...
-        make_function_hook<fnew_hook>([](fnew_hook::func_type func) {
-            if (IsLoad() == false)
+        make_function_hook<fnew_hook>([](const fnew_hook::func_type &func) {
+            if (!IsLoad()) {
                 CallOnLoad(-1);
+            }
             return func();
         });
 
         // On the second time+ a new game happens or whenever a load game
         // happens...
-        make_function_hook<ldng_hook>([](ldng_hook::func_type func) {
-            if (IsLoad() == false)
+        make_function_hook<ldng_hook>([](const ldng_hook::func_type &func) {
+            if (!IsLoad()) {
                 CallOnLoad(-1);
+            }
             return func();
         });
 
         // Whenever a load game happens
         make_function_hook<ldngb_hook>(
-            [](ldngb_hook::func_type GenericLoad, char *&e) {
+            [](const ldngb_hook::func_type &GenericLoad, char *&e) {
                 auto result = GenericLoad(e);
-                if (result)
+                if (result != 0) {
                     CallOnLoad(GetSlot());
+                }
                 return result;
             });
 
         // Whenever a save game happens
-        make_function_hook<onsav_hook>([](onsav_hook::func_type GenericSave,
-                                          void *&self, int &, int &savenum) {
-            auto result = GenericSave(self, 0, savenum);
-            if (!result)
-                CallOnSave(GetSlot());
-            return result;
-        });
+        make_function_hook<onsav_hook>(
+            [](const onsav_hook::func_type &GenericSave, void *&self, int &,
+               int &savenum) {
+                auto result = GenericSave(self, 0, savenum);
+                if (result == 0) {
+                    CallOnSave(GetSlot());
+                }
+                return result;
+            });
     }
 
   public:
     // RAII wrapper to SetDirMyDocuments, scoped change to user directory
     struct scoped_userdir {
-        char buffer[MAX_PATH];
+        std::array<char, MAX_PATH> buffer{};
 
         scoped_userdir() {
-            GetCurrentDirectoryA(sizeof(buffer), buffer);
+            GetCurrentDirectoryA(buffer.size(), buffer.data());
             SetDirMyDocuments();
         }
 
-        ~scoped_userdir() { SetCurrentDirectoryA(buffer); }
+        explicit scoped_userdir(std::string_view customPath) {
+            GetCurrentDirectoryA(buffer.size(), buffer.data());
+
+            if (customPath.data() != nullptr && !customPath.empty()) {
+                SetCurrentDirectoryA(customPath.data());
+            }
+        }
+
+        static auto blank() -> scoped_userdir {
+            std::string_view blankStr;
+            return scoped_userdir{blankStr};
+        }
+
+        scoped_userdir(scoped_userdir &&other) noexcept {
+            if (this == std::addressof(other)) {
+                return;
+            }
+
+            buffer = other.buffer;
+            other.buffer[0] = '\0';
+        }
+
+        auto operator=(scoped_userdir &&other) noexcept -> scoped_userdir & {
+            if (this == std::addressof(other)) {
+                return *this;
+            }
+
+            buffer = other.buffer;
+            other.buffer[0] = '\0';
+            return *this;
+        }
+
+        scoped_userdir(const scoped_userdir &other) noexcept = delete;
+        auto operator=(const scoped_userdir &other) noexcept
+            -> scoped_userdir & = delete;
+
+        ~scoped_userdir() {
+            if (strnlen(buffer.data(), buffer.size()) > 0) {
+                SetCurrentDirectoryA(buffer.data());
+            }
+        }
     };
 
     // Setup a callback to call whenever a new game or load game happens

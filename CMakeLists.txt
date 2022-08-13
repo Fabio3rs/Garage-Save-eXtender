@@ -14,7 +14,16 @@ add_subdirectory(googletest)
 include(GoogleTest)
 
 file(GLOB SOURCES
-    "gsx/*.cpp"
+    "gsx/CExtraSaveData.cpp"
+    "gsx/CLog.cpp"
+    "gsx/crc32.cpp"
+    "gsx/CVehicleExtraData.cpp"
+    "gsx/Exports.cpp"
+    "gsx/grgExtraManager.cpp"
+    "gsx/InternalCallbacks.cpp"
+)
+
+file(GLOB PLUGIN_SDK_DEPENDENCIES
     "plugin-sdk/plugin_sa/game_sa/CVector.cpp"
     "plugin-sdk/shared/DynAddress.cpp"
     "plugin-sdk/shared/Events.cpp"
@@ -22,13 +31,23 @@ file(GLOB SOURCES
     "plugin-sdk/shared/Patch.cpp"
 )
 
+file(GLOB ASI_SOURCES
+    "gsx/main.cpp"
+)
+
 include_directories(SYSTEM cereal/include)
-include_directories(plugin-sdk)
-include_directories(plugin-sdk/shared)
-include_directories(plugin-sdk/shared/game)
+include_directories(SYSTEM plugin-sdk)
+include_directories(SYSTEM plugin-sdk/shared)
+include_directories(SYSTEM plugin-sdk/shared/game)
 include_directories(SYSTEM BEFORE injector/include)
+
+add_library(gsx_internals STATIC ${PLUGIN_SDK_DEPENDENCIES} ${SOURCES})
+target_compile_definitions(gsx_internals PUBLIC -DGTASA=1)
+target_compile_options(gsx_internals PUBLIC -no-pie -fno-pic)
 
 add_library(gsx SHARED ${SOURCES})
 target_compile_definitions(gsx PUBLIC -DGTASA=1)
+target_compile_options(gsx PUBLIC -no-pie -fno-pic)
+target_link_libraries(gsx PUBLIC gsx_internals)
 
 add_subdirectory(gsx/tests)
