@@ -45,9 +45,18 @@ add_library(gsx_internals STATIC ${PLUGIN_SDK_DEPENDENCIES} ${SOURCES})
 target_compile_definitions(gsx_internals PUBLIC -DGTASA=1)
 target_compile_options(gsx_internals PUBLIC -no-pie -fno-pic)
 
-add_library(gsx SHARED ${SOURCES})
+add_library(gsx SHARED ${ASI_SOURCES} ${SOURCES})
 target_compile_definitions(gsx PUBLIC -DGTASA=1)
-target_compile_options(gsx PUBLIC -no-pie -fno-pic)
-target_link_libraries(gsx PUBLIC gsx_internals)
+target_compile_options(gsx PUBLIC -no-pie -fno-pic -static)
+target_link_libraries(gsx PUBLIC gsx_internals -static)
+
+set_target_properties(
+    gsx 
+    PROPERTIES
+        OUTPUT_NAME "gsx"
+        SUFFIX ".asi"
+)
 
 add_subdirectory(gsx/tests)
+
+add_subdirectory(plugins/SaveLicensePlate)

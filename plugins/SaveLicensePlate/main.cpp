@@ -1,13 +1,11 @@
 //#define _CRT_SECURE_NO_WARNINGS
+#include "../../injector/saving.hpp"
 #include "CStoredCar.h"
 #include "GSXAPI.h"
 #include <fstream>
-#include <injector/assembly.hpp>
 #include <injector/calling.hpp>
-#include <injector/injector.hpp>
 #include <plugin_sa/game_sa/CVehicle.h>
 #include <plugin_sa/game_sa/RenderWare.h>
-#include <plugin_sa/game_sa/events/Events_SA.h>
 #include <string>
 #include <windows.h>
 
@@ -16,7 +14,7 @@ auto getVehicleModelInfoByID =
     injector::cstd<CVehicleModelInfo *(int id)>::call<0x00403DA0>;
 auto CustomCarPlate_TextureCreate =
     injector::thiscall<bool(CVehicle *, CVehicleModelInfo *)>::call<0x006D10E0>;
-auto RpMaterialSetTexture =
+auto localRpMaterialSetTexture =
     injector::cstd<RpMaterial *(RpMaterial *, RwTexture *)>::call<0x0074DBC0>;
 auto licensePlateTextureCreate0 = injector::cstd<RwTexture *(
     RpMaterial *material, const char *a2, char a3)>::call<0x006FE020>;
@@ -27,7 +25,9 @@ auto generateLicenseplateMaterial = injector::cstd<RpMaterial *(
 std::fstream saveLicensePlateLog("saveLicensePlate.log",
                                  std::ios::out | std::ios::trunc);
 
+extern "C" {
 CVehicle *tempVeh = nullptr;
+}
 
 void callback(const GSX::externalCallbackStructure *test) {
     using namespace GSX;
@@ -42,9 +42,9 @@ void callback(const GSX::externalCallbackStructure *test) {
 
             if (plateText != nullptr) {
                 CVehicleModelInfo *info =
-                    getVehicleModelInfoByID(test->veh->m_wModelIndex);
+                    getVehicleModelInfoByID(test->veh->m_nModelIndex);
 
-                strncpy(info->m_plateText, plateText, 8u);
+                strncpy(info->m_szPlateText, plateText, 8u);
 
                 saveLicensePlateLog << "Before CustomCarPlate_TextureCreate"
                                     << std::endl;
@@ -117,15 +117,17 @@ void callback(const GSX::externalCallbackStructure *test) {
 uint16_t &CWeather__CurrLevel = *(uint16_t *)0x00C81314;
 RwTexture **plateTexts = (RwTexture **)0x00C3EF60;
 
+extern "C" {
 injector::auto_pointer hookPlateDrawOriginal;
+}
 
 void __declspec(naked) hookPlateDraw() {
-    __asm
-    {
-		mov tempVeh, ecx
+    asm(
+        R"asm(
+            mov %ecx, _tempVeh
 
-		jmp hookPlateDrawOriginal
-    }
+		    jmp *(_hookPlateDrawOriginal)
+        )asm");
 }
 
 // 0x006FDE50
@@ -147,12 +149,13 @@ RpMaterial *__cdecl platetext(RpMaterial *material, char a2) {
         GSX::pushDirectlyToSavedData(tempVeh, "licplateID", sizeof(v2), &v2);
     }
 
-    RpMaterialSetTexture(material, plateTexts[v2]);
+    localRpMaterialSetTexture(material, plateTexts[v2]);
     return material;
 }
 
 void onload(int id) {
     static bool loaded = false;
+    saveLicensePlateLog << "onload " << id << std::endl;
 
     if (!loaded) {
         saveLicensePlateLog << "ASI date/time: " __DATE__ " " __TIME__
@@ -170,12 +173,19 @@ void onload(int id) {
     }
 }
 
-void inject() { injector::save_manager::on_load(onload); }
+void inject() {
+    saveLicensePlateLog << "inject " << std::endl;
+    injector::save_manager::on_load(onload);
+}
 
 BOOL WINAPI DllMain(_In_ HINSTANCE hinstDLL, _In_ DWORD fdwReason,
                     _In_ LPVOID lpvReserved) {
-    if (fdwReason == DLL_PROCESS_ATTACH)
+    if (fdwReason == DLL_PROCESS_ATTACH) {
+        freopen("conout$", "w", stdout);
+        freopen("conout$", "w", stderr);
+        freopen("conin$", "r", stdin);
         inject();
+    }
 
     return true;
 }

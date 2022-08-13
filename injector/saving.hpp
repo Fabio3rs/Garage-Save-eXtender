@@ -35,11 +35,11 @@ namespace injector {
 class save_manager {
   private:
     // Hooks
-    using fnew_hook = function_hooker<scoped_call, 5498267, char()>;
-    using ldng_hook = function_hooker<scoped_call, 5490410, void()>;
-    using ldngb_hook = function_hooker<scoped_call, 5490443, char(char *)>;
+    using fnew_hook = function_hooker<scoped_call, 0x53E59B, char()>;
+    using ldng_hook = function_hooker<scoped_call, 0x53C6EA, void()>;
+    using ldngb_hook = function_hooker<scoped_call, 0x53C70B, char(char *)>;
     using onsav_hook =
-        function_hooker_fastcall<scoped_call, 5737978, int(void *, int, int)>;
+        function_hooker_fastcall<scoped_call, 0x578DFA, int(void *, int, int)>;
 
     // Prototypes
     using OnLoadType = std::function<void(int)>;
@@ -88,24 +88,26 @@ class save_manager {
         bPatched = true;
 
         // On the first time the user does a new-game/load-game...
-        make_function_hook<fnew_hook>([](const fnew_hook::func_type &func) {
-            if (!IsLoad()) {
-                CallOnLoad(-1);
-            }
-            return func();
-        });
+        static auto firstTime =
+            make_function_hook<fnew_hook>([](const fnew_hook::func_type &func) {
+                if (!IsLoad()) {
+                    CallOnLoad(-1);
+                }
+                return func();
+            });
 
         // On the second time+ a new game happens or whenever a load game
         // happens...
-        make_function_hook<ldng_hook>([](const ldng_hook::func_type &func) {
-            if (!IsLoad()) {
-                CallOnLoad(-1);
-            }
-            return func();
-        });
+        static auto secondTimePlus =
+            make_function_hook<ldng_hook>([](const ldng_hook::func_type &func) {
+                if (!IsLoad()) {
+                    CallOnLoad(-1);
+                }
+                return func();
+            });
 
         // Whenever a load game happens
-        make_function_hook<ldngb_hook>(
+        static auto wheneverLoad = make_function_hook<ldngb_hook>(
             [](const ldngb_hook::func_type &GenericLoad, char *&e) {
                 auto result = GenericLoad(e);
                 if (result != 0) {
@@ -115,7 +117,7 @@ class save_manager {
             });
 
         // Whenever a save game happens
-        make_function_hook<onsav_hook>(
+        static auto saveGame = make_function_hook<onsav_hook>(
             [](const onsav_hook::func_type &GenericSave, void *&self, int &,
                int &savenum) {
                 auto result = GenericSave(self, 0, savenum);

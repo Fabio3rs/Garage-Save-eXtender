@@ -1,6 +1,7 @@
 #include "CVehicleExtraData.h"
 #include "CExtraSaveData.h"
 #include "crc32.h"
+#include <cassert>
 #include <chrono>
 #include <ctime>
 #include <plugin_sa/game_sa/CVehicle.h>

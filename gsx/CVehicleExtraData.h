@@ -33,8 +33,8 @@ auto CEntity__getColModel =
 } // namespace
 
 class CVehicleExtraData {
-    bool carsPoolInited{};
-    CPool<CVehicle> *pool{};
+    bool carsPoolInited{false};
+    CPool<CVehicle> *pool{nullptr};
 
   public:
     struct cardata {

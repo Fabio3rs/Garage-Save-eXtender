@@ -4,6 +4,7 @@
 #include "CVehicleExtraData.h"
 #include "CustomSaveFile.hpp"
 #include <cstdint>
+#include <cstdio>
 #include <functional>
 #include <vector>
 
@@ -45,6 +46,11 @@ static auto getTempCallbacks() -> externalCallbacks_t & {
 static size_t lastCar = 0;
 
 void GSX::InternalCallbacks::onSaveGame(int id) {
+    std::printf("Game loaded %d\n", id);
+    std::printf("Game loaded %d\n", id);
+    std::printf("Game loaded %d\n", id);
+    std::printf("Game loaded %d\n", id);
+    std::printf("Game loaded %d\n", id);
     auto userdir = scopedUserdirFactory();
 
     auto saveFile = CustomSaveFile::openGsxSaveFile(
