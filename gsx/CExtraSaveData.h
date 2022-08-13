@@ -2,78 +2,50 @@
 #ifndef GTASA_EXTRASAVEDATA
 #define GTASA_EXTRASAVEDATA
 #define SUPPORTED_10US
+#include "LoadSaveStructs.h"
+#include <cereal/archives/portable_binary.hpp>
+#include <deque>
+#include <functional>
 #include <map>
+#include <plugin_sa/game_sa/CVector.h>
 #include <string>
 #include <vector>
-#include <deque>
-#include <plugin_sa\game_sa\CVector.h>
-#include "LoadSaveStructs.h"
-#include <cereal\cereal.hpp>
-#include <cereal\types\map.hpp>
-#include <cereal\types\deque.hpp>
-#include <cereal\types\vector.hpp>
-#include <cereal\types\string.hpp>
-#include <cereal\archives\portable_binary.hpp>
 
-struct car
-{
-	int model;
-	CVector pos;
-	std::map<std::string, toLoadData> data;
+class CVehicle;
 
-	template<class Archive>
-	void load(Archive &archive)
-	{
-		archive(model, pos, data);
-	}
+struct car {
+    int model;
+    CVector pos;
+    std::map<std::string, toLoadData> data;
 
-	template<class Archive>
-	void save(Archive &archive) const
-	{
-		archive(model, pos, data);
-	}
+    template <class Archive> void serialize(Archive &archive) {
+        archive(model, pos, data);
+    }
 };
 
-class CExtraSaveData
-{
-	typedef std::function<void(int)> OnLoadGameType;
-	typedef std::function<void(int)> OnSaveGameType;
+class CExtraSaveData {
+    typedef std::function<void(int)> OnLoadGameType;
+    typedef std::function<void(int)> OnSaveGameType;
 
-	static OnLoadGameType& OnRestoreCallback();
-	static OnSaveGameType& OnSaveCallback();
+    static OnLoadGameType &OnRestoreCallback();
+    static OnSaveGameType &OnSaveCallback();
 
-	static void loads(int id);
-	static void saves(int id);
+    static void loads(int id);
+    static void saves(int id);
 
-public:
-	std::deque<car> data;
+  public:
+    std::deque<car> data;
 
-	template<class Archive>
-	void load(Archive &archive)
-	{
-		archive(data);
-	}
+    template <class Archive> void serialize(Archive &archive) { archive(data); }
 
-	template<class Archive>
-	void save(Archive &archive) const
-	{
-		archive(data);
-	}
-	
-	static void on_load(const OnLoadGameType& fn)
-	{
-		OnRestoreCallback() = fn;
-	}
+    static void on_load(const OnLoadGameType &fn) { OnRestoreCallback() = fn; }
 
-	static void on_save(const OnSaveGameType& fn)
-	{
-		OnSaveCallback() = fn;
-	}
+    static void on_save(const OnSaveGameType &fn) { OnSaveCallback() = fn; }
 
-	static CExtraSaveData &inst();
+    static CExtraSaveData &inst();
 
-private:
-	CExtraSaveData();
+  private:
+    CExtraSaveData();
 };
 
 #endif

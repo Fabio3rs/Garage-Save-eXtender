@@ -1,12 +1,12 @@
 #pragma once
 #ifndef GARAGESAVEEXTENDERAPI_H
 #define GARAGESAVEEXTENDERAPI_H
-#include <Windows.h>
+#include <windows.h>
 #include <cstdint>
 
 // Plugin-SDK dependent headers
 #include "CStoredCar.h"
-#include <plugin_sa\game_sa\CVehicle.h>
+#include <plugin_sa/game_sa/CVehicle.h>
 
 namespace GSX
 {

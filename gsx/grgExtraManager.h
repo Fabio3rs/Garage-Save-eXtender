@@ -18,11 +18,11 @@ class grgExtraManager
 
 	CVehicle *veh;
 
+public:
 	static void internalWrapperRestore();
 	static void internalWrapperRestoreBef();
 	static void internalWrapperSave();
 
-public:
 	static void on_restore(const OnRestoreType& fn)
 	{
 		grg();

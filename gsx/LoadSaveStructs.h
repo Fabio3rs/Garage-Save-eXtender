@@ -5,10 +5,10 @@
 #include <vector>
 #include <cstdint>
 #include <map>
-#include <cereal\cereal.hpp>
-#include <cereal\types\map.hpp>
-#include <cereal\types\vector.hpp>
-#include <cereal\archives\portable_binary.hpp>
+#include <cereal/cereal.hpp>
+#include <cereal/types/map.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/portable_binary.hpp>
 
 struct toLoadData
 {
