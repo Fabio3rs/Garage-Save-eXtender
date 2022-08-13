@@ -19,6 +19,7 @@ set_target_properties(
     SaveLicensePlate 
     PROPERTIES
         OUTPUT_NAME "SaveLicensePlate"
+        PREFIX ""
         SUFFIX ".asi"
 )
 

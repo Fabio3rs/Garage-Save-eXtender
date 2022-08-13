@@ -53,6 +53,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          file: "build/libConsoleEnablerMod.asi"
+          file: "build/gsx.asi;build/plugins/SaveLicensePlate/SaveLicensePlate.asi"
           tags: true
           draft: false

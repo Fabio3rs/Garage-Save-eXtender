@@ -32,85 +32,89 @@ CVehicle *tempVeh = nullptr;
 void callback(const GSX::externalCallbackStructure *test) {
     using namespace GSX;
 
-    if (test->veh) {
-        tempVeh = test->veh;
+    if (test->veh == nullptr) {
+        return;
+    }
 
-        switch (test->status) {
-        case GSX::LOAD_CAR: {
-            const char *plateText =
-                (const char *)getSavedData(test->veh, "carplate");
+    tempVeh = test->veh;
+    saveLicensePlateLog << std::to_string((uintptr_t)test->veh) << " status   "
+                        << test->status << std::endl;
 
-            if (plateText != nullptr) {
-                CVehicleModelInfo *info =
-                    getVehicleModelInfoByID(test->veh->m_nModelIndex);
+    switch (test->status) {
+    case GSX::LOAD_CAR: {
+        const char *plateText =
+            (const char *)getSavedData(test->veh, "carplate");
 
-                strncpy(info->m_szPlateText, plateText, 8u);
+        if (plateText != nullptr) {
+            CVehicleModelInfo *info =
+                getVehicleModelInfoByID(test->veh->m_nModelIndex);
 
-                saveLicensePlateLog << "Before CustomCarPlate_TextureCreate"
-                                    << std::endl;
+            strncpy(info->m_szPlateText, plateText, 8u);
 
-                if (CustomCarPlate_TextureCreate(test->veh, info)) {
-                    char testPlate[9] = {0};
+            saveLicensePlateLog << "Before CustomCarPlate_TextureCreate"
+                                << std::endl;
 
-                    strncpy(testPlate, plateText, 8u);
-                    testPlate[8] = 0;
-                    saveLicensePlateLog << "Plate type "
-                                        << (int)info->m_nPlateType << std::endl;
-
-                    saveLicensePlateLog
-                        << std::to_string((uintptr_t)test->veh)
-                        << " GTA SA function CustomCarPlate_TextureCreate: OK  "
-                        << testPlate << std::endl;
-                } else {
-                    saveLicensePlateLog << std::to_string((uintptr_t)test->veh)
-                                        << " GTA SA function "
-                                           "CustomCarPlate_TextureCreate: error"
-                                        << std::endl;
-                }
-            } else {
-                saveLicensePlateLog << std::to_string((uintptr_t)test->veh)
-                                    << " plateText is nullptr " << std::endl;
-            }
-
-            break;
-        }
-
-        case GSX::SAVE_CAR: {
-            if (test->veh->m_pCustomCarPlate) {
-                setDataToSaveLater(test->veh, "carplate", 8,
-                                   test->veh->m_pCustomCarPlate->name, true);
-
+            if (CustomCarPlate_TextureCreate(test->veh, info)) {
                 char testPlate[9] = {0};
 
-                strncpy(testPlate, test->veh->m_pCustomCarPlate->name, 8u);
+                strncpy(testPlate, plateText, 8u);
                 testPlate[8] = 0;
-
-                saveLicensePlateLog << std::to_string((uintptr_t)test->veh)
-                                    << " saving license plate " << testPlate
+                saveLicensePlateLog << "Plate type " << (int)info->m_nPlateType
                                     << std::endl;
+
+                saveLicensePlateLog
+                    << std::to_string((uintptr_t)test->veh)
+                    << " GTA SA function CustomCarPlate_TextureCreate: OK  "
+                    << testPlate << std::endl;
             } else {
                 saveLicensePlateLog << std::to_string((uintptr_t)test->veh)
-                                    << " veh->m_pCustomCarPlate is nullptr"
+                                    << " GTA SA function "
+                                       "CustomCarPlate_TextureCreate: error"
                                     << std::endl;
             }
-            break;
+        } else {
+            saveLicensePlateLog << std::to_string((uintptr_t)test->veh)
+                                << " plateText is nullptr " << std::endl;
         }
 
-        case GSX::LOAD_CAR_BEFORE_SPAWN: {
-            CVehicleModelInfo *info =
-                getVehicleModelInfoByID(test->gameStoredData->model);
+        break;
+    }
 
-            int *idptr = (int *)GSX::getSavedData(test->veh, "licplateID");
+    case GSX::SAVE_CAR: {
+        if (test->veh->m_pCustomCarPlate) {
+            setDataToSaveLater(test->veh, "carplate", 8,
+                               test->veh->m_pCustomCarPlate->name, true);
 
-            if (idptr != nullptr) {
-                info->m_nPlateType = *idptr;
-            }
-        } break;
+            char testPlate[9] = {0};
 
-        default:
-            saveLicensePlateLog << "GSX unknow status" << std::endl;
-            break;
+            strncpy(testPlate, test->veh->m_pCustomCarPlate->name, 8u);
+            testPlate[8] = 0;
+
+            saveLicensePlateLog << std::to_string((uintptr_t)test->veh)
+                                << " saving license plate " << testPlate
+                                << std::endl;
+        } else {
+            saveLicensePlateLog << std::to_string((uintptr_t)test->veh)
+                                << " veh->m_pCustomCarPlate is nullptr"
+                                << std::endl;
         }
+        break;
+    }
+
+    case GSX::LOAD_CAR_BEFORE_SPAWN: {
+        CVehicleModelInfo *info =
+            getVehicleModelInfoByID(test->gameStoredData->model);
+
+        int *idptr = (int *)GSX::getSavedData(test->veh, "licplateID");
+
+        if (idptr != nullptr) {
+            info->m_nPlateType = *idptr;
+        }
+    } break;
+
+    default:
+        saveLicensePlateLog << "GSX unknow status" << std::endl;
+        break;
     }
 }
 

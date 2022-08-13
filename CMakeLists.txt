@@ -54,6 +54,7 @@ set_target_properties(
     gsx 
     PROPERTIES
         OUTPUT_NAME "gsx"
+        PREFIX ""
         SUFFIX ".asi"
 )
 
