@@ -42,10 +42,10 @@ static void __declspec(naked) restoreHook() {
 
 		call _internalWrapperRestore
 
-		popa
 		popf
+		popa
 
-		jmp _original_fun
+		jmp *(_original_fun)
 	)asm");
 }
 
@@ -77,8 +77,8 @@ template <uintptr_t V> struct wrapper {
             : "a"(retaddr));
 
         asm(R"asm(
-            popa
-            popf
+		popf
+		popa
         )asm");
 
         asm(R"asm(
@@ -107,10 +107,10 @@ static void __declspec(naked) saveHook() {
 
 		call _internalWrapperRestore
 
-		popa
 		popf
+		popa
 
-		jmp _original_fun
+		jmp *(_funSave)
 	)asm");
 }
 
