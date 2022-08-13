@@ -1,5 +1,7 @@
 #!/bin/bash
 
+wineboot
+
 set -e
 
 CONTENT=$(echo "#!/bin/bash
