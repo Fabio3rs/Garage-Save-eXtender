@@ -8,6 +8,11 @@ set(CXX17 ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_C_EXTENSIONS ON)
 
+include(CTest)
+enable_testing()
+add_subdirectory(googletest)
+include(GoogleTest)
+
 file(GLOB SOURCES
     "gsx/*.cpp"
     "plugin-sdk/plugin_sa/game_sa/CVector.cpp"
@@ -25,3 +30,5 @@ include_directories(SYSTEM BEFORE injector/include)
 
 add_library(gsx SHARED ${SOURCES})
 target_compile_definitions(gsx PUBLIC -DGTASA=1)
+
+add_subdirectory(gsx/tests)
