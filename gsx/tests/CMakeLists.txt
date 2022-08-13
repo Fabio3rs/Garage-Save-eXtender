@@ -22,5 +22,5 @@ target_link_libraries(maintest gsx_internals gtest gtest_main)
 target_compile_options(maintest PUBLIC -static)
 target_link_options(maintest PUBLIC -static)
 
-gtest_discover_tests(maintest)
+gtest_discover_tests(maintest DISCOVERY_MODE PRE_TEST)
 

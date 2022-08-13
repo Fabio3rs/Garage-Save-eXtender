@@ -12,3 +12,5 @@ echo "$CONTENT" > "$1"
 chmod +x "$1"
 
 echo "placeholder" > "$1.placeholder"
+
+ls -lahtr
