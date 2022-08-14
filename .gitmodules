@@ -1,0 +1,9 @@
+[submodule "plugin-sdk"]
+	path = plugin-sdk
+	url = https://github.com/DK22Pac/plugin-sdk.git
+[submodule "cereal"]
+	path = cereal
+	url = https://github.com/USCiLab/cereal
+[submodule "googletest"]
+	path = googletest
+	url = https://github.com/google/googletest

@@ -1,0 +1,58 @@
+name: Build and publish release
+
+on:
+  push:
+    tags:
+      - '*'
+    branches:
+      - main
+      - dev
+
+jobs:
+  BuildAndPublishRelease: 
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+        
+      - name: Install deps
+        run: |
+          sudo apt update
+          sudo apt install -y cmake ninja-build
+          sudo apt install -y gcc-mingw-w64-i686 g++-mingw-w64-i686 binutils-mingw-w64-i686 mingw-w64 win-iconv-mingw-w64-dev
+          sudo update-alternatives --set i686-w64-mingw32-gcc $(sudo update-alternatives --list i686-w64-mingw32-gcc | grep posix | head -n 1)
+          sudo update-alternatives --set i686-w64-mingw32-g++ $(sudo update-alternatives --list i686-w64-mingw32-g++ | grep posix | head -n 1)
+          echo "Adding wine32"
+          sudo apt purge -y nginx
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt install -y wine32
+        
+      - name: Compiling
+        env:
+          CC: /usr/bin/i686-w64-mingw32-gcc
+          CXX: /usr/bin/i686-w64-mingw32-g++
+        run: |
+          mkdir build && cd build
+          cmake .. -G Ninja -DCMAKE_BUILD_TYPE=MinSizeRel
+          cmake --build . --config MinSizeRel --target all -j $(nproc) --
+          cd ..
+
+      - name: Testing
+        env:
+          WINEARCH: win32
+          CC: /usr/bin/i686-w64-mingw32-gcc
+          CXX: /usr/bin/i686-w64-mingw32-g++
+        run: |
+          cd build
+          ctest -j10 -C Release -T test --output-on-failure
+
+      - uses: xresloader/upload-to-github-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          file: "build/gsx.asi;build/plugins/SaveLicensePlate/SaveLicensePlate.asi"
+          tags: true
+          draft: false

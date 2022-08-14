@@ -1,13 +1,13 @@
 /*
     CStoredCar structure (Grand Theft Auto San Andreas) header file
-    
+
     Used in https://github.com/Fabio3rs/Garage-Save-eXtender
 */
 #pragma once
 #ifndef CStoredCar_h
 #define CStoredCar_h
 #include <cstdint>
-#include <plugin_sa\game_sa\CVector.h>
+#include <plugin_sa/game_sa/CVector.h>
 
 /*00000000 pos             RwV3D ?
 0000000C handling_flags  dd ?
@@ -29,32 +29,30 @@
 00000039 bomb_type       db ? ; first 3 bits from CVehicle + 0x4A8
 0000003A paintjob        db ?
 0000003B nitro_count     db ?
-0000003C angleX          db ? ; multiply by 0.009999999776482582 to get real value
-0000003D angleY          db ?
-0000003E angleZ          db ?
-0000003F field_3F        db ?*/
+0000003C angleX          db ? ; multiply by 0.009999999776482582 to get real
+value 0000003D angleY          db ? 0000003E angleZ          db ? 0000003F
+field_3F        db ?*/
 
 #pragma pack(push, 1)
-class CStoredCar
-{
-public:
-	CVector pos;
-	uint32_t handling_flags;
-	uint8_t flags;
-	uint8_t field_11;
-	uint16_t model;
-	uint16_t carmods[15];
-	uint8_t colour[4];
-	uint8_t radio_station;
-	uint8_t extra1;
-	uint8_t extra2;
-	uint8_t bomb_type;
-	uint8_t paintjob;
-	uint8_t nitro_count;
-	uint8_t angleX;
-	uint8_t angleY;
-	uint8_t angleZ;
-	uint8_t field_3F;
+class CStoredCar {
+  public:
+    CVector pos;
+    uint32_t handling_flags;
+    uint8_t flags;
+    uint8_t field_11;
+    uint16_t model;
+    uint16_t carmods[15];
+    uint8_t colour[4];
+    uint8_t radio_station;
+    uint8_t extra1;
+    uint8_t extra2;
+    uint8_t bomb_type;
+    uint8_t paintjob;
+    uint8_t nitro_count;
+    uint8_t angleX;
+    uint8_t angleY;
+    uint8_t angleZ;
+    uint8_t field_3F;
 };
 #pragma pack(pop)
 
