@@ -26,7 +26,7 @@
 
 ## 📋 Requirements
 
-- GTA San Andreas (US v1.0 recommended)
+- GTA San Andreas (US v1.0 recommended or compact executable US compatible)
 - ASI Loader
 - Microsoft Visual C++ Redistributable (for Windows)
 
